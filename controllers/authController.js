@@ -48,14 +48,15 @@ const createTransporter = () => {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 
   return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    secure: Number(SMTP_PORT) === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
-    },
-  });
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  family: 4, // Force IPv4
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
+});
 };
 
 const sendVerificationEmail = async ({ email, name, token }) => {
