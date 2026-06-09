@@ -217,7 +217,7 @@ exports.register = async (req, res) => {
     const { rawToken, hashedToken, expiresAt } = createVerificationToken();
     userData.emailVerificationTokenHash = hashedToken;
     userData.emailVerificationExpires = expiresAt;
-    userData.isEmailVerified = false;
+    userData.isEmailVerified = true;
 
     // Add role-specific fields
     if (role === "volunteer") {
@@ -232,42 +232,17 @@ exports.register = async (req, res) => {
     // Create user
     const user = await User.create(userData);
 
-    try {
-      const mailResult = await sendVerificationEmail({
-        email: user.email,
-        name: user.name,
-        token: rawToken,
-      });
-
-      const isDevBypass = mailResult?.delivery === "dev-bypass";
-
-      return res.status(201).json({
-        message: isDevBypass
-          ? "Account created. SMTP is not configured, so use the dev verification link from backend logs."
-          : "Registration successful. Please verify your email before signing in.",
-        requiresEmailVerification: true,
-        email: user.email,
-        ...(isDevBypass ? { verificationUrl: mailResult.verifyUrl } : {}),
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          location: user.location,
-          isEmailVerified: user.isEmailVerified,
-        },
-      });
-    } catch (emailError) {
-      await User.findByIdAndDelete(user._id);
-      return res.status(500).json({
-        message: "Could not send verification email. Please try again.",
-        error: emailError.message,
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    return res.status(201).json({
+  message: "Registration successful",
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    location: user.location,
+    isEmailVerified: true,
+  },
+});
 
 // Login user
 exports.login = async (req, res) => {
@@ -281,13 +256,6 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    if (!user.isEmailVerified) {
-      return res.status(403).json({
-        message: "Please verify your email before signing in.",
-        code: "EMAIL_NOT_VERIFIED",
-        email: user.email,
-      });
-    }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
