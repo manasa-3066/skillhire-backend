@@ -48,14 +48,14 @@ const createTransporter = () => {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 
   return nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: Number(SMTP_PORT),
-  secure: false,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+    host: SMTP_HOST,
+    port: Number(SMTP_PORT),
+    secure: false,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  });
 };
 
 const sendVerificationEmail = async ({ email, name, token }) => {
@@ -233,16 +233,21 @@ exports.register = async (req, res) => {
     const user = await User.create(userData);
 
     return res.status(201).json({
-  message: "Registration successful",
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    location: user.location,
-    isEmailVerified: true,
-  },
-});
+      message: "Registration successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        location: user.location,
+        isEmailVerified: true,
+      },
+    });
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Login user
 exports.login = async (req, res) => {
